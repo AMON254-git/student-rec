@@ -30,7 +30,7 @@ Each layer only talks to the one directly below it. The presentation layer never
 
 | Field | Rule |
 |---|---|
-| `reg_no` | Required, unique, format like `BIT/1234/22` |
+| `reg_no` | Required, unique, 2–8 alphanumeric groups separated by `/` or `-`, maximum 30 characters |
 | `name` | Required, at least 2 characters |
 | `course` | Required |
 | `year` | Required, whole number from 1 to 4 |
@@ -61,7 +61,7 @@ Output of `client_cli.py` against the running server:
 ```
 POST register student                HTTP 201  {"id":1}
 POST duplicate reg number            HTTP 409  {"error":"Reg number BIT/1234/22 already exists"}
-POST invalid reg number              HTTP 400  {"error":"Reg number must look like BIT/1234/22"}
+POST invalid reg number              HTTP 400  {"error":""Reg number must be groups of letters or digits split by / or -"} 
 GET all students                     HTTP 200  [{"course":"BSc IT",...
 PUT update year to 4                 HTTP 200  {"id":1}
 DELETE student                       HTTP 204

@@ -7,7 +7,7 @@ def show(label, r):
     print(f"{label:<36} HTTP {r.status_code}  {r.text.strip()[:60]}")
 
 if __name__ == "__main__":
-    good = {"reg_no": "BIT/1234/22", "name": "Amon Kiptoo", "course": "BSc IT", "year": 3}
+    good = {"reg_no": "BDSA/MK/4079/09/25", "name": "Amon Kiprono", "course": "Data Science", "year": 2}
     r = requests.post(BASE, json=good)
     show("POST register student", r)
     sid = r.json()["id"]
