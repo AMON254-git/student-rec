@@ -1,0 +1,5 @@
+venv/
+students.db
+notes.db
+__pycache__/
+.DS_Store

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Local Student Management System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:system-ui,sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem;color:#222}
+input,select,button{font:inherit;padding:.5rem;box-sizing:border-box}
+form{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+form .full{grid-column:1/-1}
+button{cursor:pointer}
+table{width:100%;border-collapse:collapse;margin:1rem 0}
+th,td{border-bottom:1px solid #ddd;padding:.5rem;text-align:left}
+.err{color:#b00020}.ok{color:#0a7a2f}
+#log{background:#111;color:#9f9;padding:.75rem;border-radius:6px;font:12px monospace;white-space:pre-wrap;max-height:180px;overflow:auto}
+</style></head><body>
+<h1>Local Student Management System</h1>
+<p>Presentation layer (browser) calling the Flask API on localhost.</p>
+<form onsubmit="save(event)">
+  <input id="reg_no" placeholder="Reg No (e.g. BIT/1234/22)" required>
+  <input id="name" placeholder="Full name" required>
+  <input id="course" placeholder="Course (e.g. BSc IT)" required>
+  <select id="year"><option>1</option><option>2</option><option>3</option><option>4</option></select>
+  <button class="full" id="saveBtn" type="submit">Register student</button>
+</form>
+<p id="msg"></p>
+<table><thead><tr><th>Reg No</th><th>Name</th><th>Course</th><th>Year</th><th></th></tr></thead><tbody id="rows"></tbody></table>
+<h3>Request log</h3><div id="log"></div>
+<script>
+let editingId = null, students = [];
+const $ = id => document.getElementById(id);
+const log = m => { $('log').textContent += m + '\n'; $('log').scrollTop = 1e9; };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function api(method, url, data){
+  const r = await fetch(url, {method, headers:{'Content-Type':'application/json'}, body: data ? JSON.stringify(data) : undefined});
+  log(method + ' ' + url + ' -> ' + r.status);
+  return r;
+}
+async function load(){
+  students = await (await api('GET', '/api/students')).json();
+  $('rows').innerHTML = students.map(s =>
+    `<tr><td>${esc(s.reg_no)}</td><td>${esc(s.name)}</td><td>${esc(s.course)}</td><td>${s.year}</td>
+     <td><button onclick="edit(${s.id})">Edit</button> <button onclick="del(${s.id})">Delete</button></td></tr>`).join('');
+}
+async function save(e){
+  e.preventDefault();
+  const data = {reg_no:$('reg_no').value, name:$('name').value, course:$('course').value, year:$('year').value};
+  const r = editingId ? await api('PUT', '/api/students/' + editingId, data) : await api('POST', '/api/students', data);
+  if (r.ok){
+    $('msg').className = 'ok'; $('msg').textContent = editingId ? 'Student updated' : 'Student registered';
+    editingId = null; $('saveBtn').textContent = 'Register student'; e.target.reset(); load();
+  } else {
+    $('msg').className = 'err'; $('msg').textContent = (await r.json()).error;
+  }
+}
+function edit(id){
+  const s = students.find(x => x.id === id); editingId = id;
+  $('reg_no').value = s.reg_no; $('name').value = s.name; $('course').value = s.course; $('year').value = s.year;
+  $('saveBtn').textContent = 'Save changes';
+}
+async function del(id){ await api('DELETE', '/api/students/' + id); load(); }
+load();
+</script></body></html>
